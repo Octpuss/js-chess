@@ -2,16 +2,16 @@ const gameBoard = document.querySelector("#gameboard");
 const playerDisplay = document.querySelector("#player");
 const infoDisplay = document.querySelector("#info-display");
 const width = 8;
-let playerGo = "black";
-playerDisplay.textContent = "black";
+let playerGo = "white";
+playerDisplay.textContent = "white";
 // prettier-ignore
 const startPieces = [rook,knight,bishop,queen,king,bishop,knight,rook,pawn,pawn,pawn,pawn,pawn,pawn,pawn,pawn,"","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",pawn,pawn,pawn,pawn,pawn,pawn,pawn,pawn,rook,knight,bishop,queen,king,bishop,knight,rook,];
 console.log(startPieces);
 function createBoard() {
-  startPieces.forEach((startPiece, index) => {
+  startPieces.forEach((eachStartPiece, index) => {
     const square = document.createElement("div");
     square.classList.add("square");
-    square.innerHTML = startPiece;
+    square.innerHTML = eachStartPiece;
     square.firstChild?.setAttribute("draggable", true);
     square.setAttribute("square-id", index);
     // square.classList.add("beige");
@@ -59,13 +59,33 @@ function dragDrop(e) {
   const opponent = playerGo === "white" ? "black" : "white";
   const occupByOpponent = e.target.firstChild?.classList.contains(opponent);
   //   console.log(occupByOpponent);
-  const valid = checkIfValid(e.target, occupByOpponent, occupied);
+  const valid = checkIfValid(e.target);
+  console.log(valid);
   if (correctGo) {
-    // must check this first
+    // check if its castling
+    if (valid === "castlingRight") {
+      e.target.append(draggedElement);
+      const rookSquare = document.querySelector(`[square-id="0"]`);
+      const rookFutureSquare = document.querySelector(`[square-id="2"]`);
+      const rook = rookSquare.firstChild;
+      rookFutureSquare.append(rook);
+      //   rookSquare.firstChild.remove();
+      return;
+    }
+    if (valid === "castlingLeft") {
+      e.target.append(draggedElement);
+      const rookSquare = document.querySelector(`[square-id="7"]`);
+      const rookFutureSquare = document.querySelector(`[square-id="5"]`);
+      const rook = rookSquare.firstChild;
+      rookFutureSquare.append(rook);
+      //   rookSquare.firstChild.remove();
+      return;
+    }
+    // then check this
     if (occupByOpponent && valid) {
       e.target.parentNode.append(draggedElement);
       e.target.remove();
-      changePlayer();
+      //   changePlayer();
       return;
     }
     // then check this
@@ -76,7 +96,7 @@ function dragDrop(e) {
     }
     if (valid) {
       e.target.append(draggedElement);
-      changePlayer();
+      //   changePlayer();
       return;
     }
     if (!valid) {
@@ -91,6 +111,18 @@ function dragDrop(e) {
   //   changePlayer();
 }
 
+function reverseIds() {
+  const allSquares = document.querySelectorAll(".square");
+  allSquares.forEach((square, i) =>
+    square.setAttribute("square-id", width * width - 1 - i)
+  );
+}
+reverseIds();
+function revertIds() {
+  const allSquares = document.querySelectorAll(".square");
+  allSquares.forEach((square, i) => square.setAttribute("square-id", i));
+}
+
 function changePlayer() {
   if (playerGo === "black") {
     reverseIds();
@@ -101,18 +133,6 @@ function changePlayer() {
     playerGo = "black";
     playerDisplay.textContent = "black";
   }
-}
-
-function reverseIds() {
-  const allSquares = document.querySelectorAll(".square");
-  allSquares.forEach((square, i) =>
-    square.setAttribute("square-id", width * width - 1 - i)
-  );
-}
-
-function revertIds() {
-  const allSquares = document.querySelectorAll(".square");
-  allSquares.forEach((square, i) => square.setAttribute("square-id", i));
 }
 
 function checkIfValid(target) {
@@ -131,8 +151,8 @@ function checkIfValid(target) {
       if (
         starterRow.includes(startId) && startId + width * 2 === targetId && !document.querySelector(`[square-id="${startId + width * 2}"]`).firstChild && !document.querySelector(`[square-id="${startId + width}"]`).firstChild ||
         startId + width === targetId && !document.querySelector(`[square-id="${startId + width}"]`).firstChild ||
-        startId + width + 1 === targetId && !document.querySelector(`[square-id="${startId + width + 1}"]`).firstChild ||
-        startId + width - 1 === targetId && !document.querySelector(`[square-id="${startId + width - 1}"]`).firstChild
+        startId + width + 1 === targetId && document.querySelector(`[square-id="${startId + width + 1}"]`).firstChild ||
+        startId + width - 1 === targetId && document.querySelector(`[square-id="${startId + width - 1}"]`).firstChild
       ) {
         // console.log(ocup);
         return true;
@@ -297,6 +317,18 @@ function checkIfValid(target) {
         startId - width - 1 === targetId 
       ) {
         return true
+      }
+      case "king":
+      if (
+        startId === 3 && document.querySelector(`[square-id="0"]`).firstChild.id === "rook" && !document.querySelector(`[square-id="1"]`).firstChild && !document.querySelector(`[square-id="2"]`).firstChild && targetId === 1
+      ) {
+        return 'castlingRight'
+      }
+      case "king":
+      if (
+        startId === 3 && document.querySelector(`[square-id="7"]`).firstChild.id === "rook" && !document.querySelector(`[square-id="4"]`).firstChild && !document.querySelector(`[square-id="5"]`).firstChild && !document.querySelector(`[square-id="6"]`).firstChild && targetId === 6
+      ) {
+        return 'castlingLeft'
       }
   }
 }
